@@ -1,6 +1,7 @@
 # NBA Bet Recommender — Final Case Study Repo
 
-## Setup
+## Run locally
+###  Setup
 
 1. **Create virtual environment:**
    ```bash
@@ -30,6 +31,9 @@
    ```bash
    streamlit run app/streamlit_app.py
    ```
+
+## Access to the dashboard only
+https://nba-bet-recommender-321836100678.us-central1.run.app
 
 ## Features
 
