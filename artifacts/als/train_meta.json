@@ -1,0 +1,11 @@
+{
+  "ref_date": "2025-04-13",
+  "half_life_days": 7,
+  "cap_quantile": 0.99,
+  "cap_value": 389.2915137400141,
+  "factors": 16,
+  "regularization": 0.01,
+  "iterations": 10,
+  "bm25_k1": 0.8,
+  "bm25_b": 0.75
+}

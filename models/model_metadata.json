@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "trained_on": "2025-09-05T16:07:35.095907",
+  "algorithm": "LightGBM + Isotonic",
+  "features": [
+    "home_stake_sum",
+    "away_stake_sum",
+    "bet_ratio_home",
+    "avg_home_odds"
+  ],
+  "training_rows": 300,
+  "notes": "Trained on synthetic mock dataset"
+}
