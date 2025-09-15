@@ -9,3 +9,6 @@ joblib
 python-dateutil
 openai
 python-dotenv
+openpyxl
+xgboost
+implicit
