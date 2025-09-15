@@ -28,6 +28,15 @@ from streamlit_app_func import (
     generate_date_specific_ai_analysis
 )
 
+from ai_agent import (
+    load_chatbot_context_data,
+    NBAAnalysisAgent,
+    get_analysis_agent,
+    reset_agent_conversation,
+    display_analysis_data,
+)
+
+
 st.set_page_config(
     page_title="NBA Recommender — Dashboard", 
     layout="wide",
@@ -441,10 +450,11 @@ with krow[5]: st.metric(f"Dollar Ranking Quality", calculate_kpi(metrics, "nDCG$
 
 # ---------------- Enhanced Tabs with Colored Buttons -------------------------------
 st.markdown("<br>", unsafe_allow_html=True)
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📈 Daily Performance", 
     "👤 Player Analysis", 
-    "🧪 Validation & Simulation"
+    "🧪 Validation & Simulation",
+    "🤖 AI Assistant"  
 ])
 
 # ---- Daily Performance Tab ----
@@ -1020,3 +1030,72 @@ with tab3:
                 """, unsafe_allow_html=True)
         else:
             st.info("Need at least 4 simulation periods and selected period for comprehensive schedule-trend analysis")
+
+# ---- AI Assistant chat bot Tab ----
+with tab4:
+    st.header("🤖 AI Analysis Agent")
+    st.markdown("*Chat about simulation accuracy, user performance, and recommendation quality.*")
+
+    with st.spinner("Loading analysis data..."):
+        chatbot_context = load_chatbot_context_data()
+
+    if chatbot_context and (not chatbot_context["pair_metrics"].empty or not chatbot_context["simulation_periods"].empty):
+        agent = get_analysis_agent(chatbot_context)
+
+        c1, c2, c3, c4 = st.columns([2,1,1,1])
+        with c1:
+            st.info(f"🧠 **Agent Memory:** {agent.get_conversation_summary()}")
+        with c2:
+            if st.button("🔄 Refresh Data"):
+                st.session_state.analysis_agent.context_data = load_chatbot_context_data()
+                st.success("Data refreshed")
+                st.rerun()
+        with c3:
+            if st.button("🧹 Clear Memory"):
+                reset_agent_conversation()
+                st.success("Memory cleared")
+                st.rerun()
+        with c4:
+            st.metric("Session", agent.session_id)
+
+        st.divider()
+
+        # Show convo
+        for msg in agent.conversation_memory:
+            with st.chat_message("user" if msg["role"]=="user" else "assistant"):
+                st.markdown(msg["content"])
+                analysis = msg.get("metadata", {}).get("analysis")
+                if analysis and analysis.get("data") and "error" not in analysis["data"]:
+                    with st.expander("📊 Analysis Data", expanded=False):
+                        display_analysis_data(analysis)
+
+        # Starters
+        if not agent.conversation_memory:
+            st.subheader("💡 Try one:")
+            cols = st.columns(2)
+            starters = [
+                "Give me an overall performance summary.",
+                "Analyze user 100245’s accuracy.",
+                "Which simulation period performed best and why?",
+                "How does schedule accuracy relate to hit rate?"
+            ]
+            for i, q in enumerate(starters):
+                with cols[i%2]:
+                    if st.button(f"💬 {q}", key=f"starter_{i}"):
+                        out = agent.process_user_message(q)
+                        st.rerun()
+
+        # Input
+        if prompt := st.chat_input("Ask about accuracy, misses, users, or periods…"):
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking…"):
+                    out = agent.process_user_message(prompt)
+                    st.markdown(out["response"])
+                    if out["analysis_data"] and out["analysis_data"].get("data") and "error" not in out["analysis_data"]["data"]:
+                        with st.expander("📊 Analysis Data", expanded=False):
+                            display_analysis_data(out["analysis_data"])
+            st.rerun()
+    else:
+        st.error("No validation data found. Generate metrics first.")
